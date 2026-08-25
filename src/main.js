@@ -1,6 +1,7 @@
 import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { CAMERA, LOCATIONS, SPAWN_PROBE_HEIGHT, TILES } from './config.js';
 import { CameraRig } from './cameraRig.js';
+import { runDiagnostics } from './diagnostics.js';
 import { Hud } from './hud.js';
 import { Input } from './input.js';
 import { Player } from './player.js';
@@ -96,6 +97,20 @@ showStartCard();
 window.addEventListener( 'resize', onResize );
 renderer.setAnimationLoop( tick );
 
+function dumpDiagnostics() {
+
+	const { text, data } = runDiagnostics( { world, player, camera } );
+	console.log( text );
+	window.taniSonucu = data;
+	hud.showOverlay(
+		'<strong>Tanı raporu</strong>' +
+		`<pre class="diag">${ escapeHtml( text ) }</pre>` +
+		'<p class="muted">Konsola da yazıldı. Kapatmak için tuvale tıklayın.</p>',
+		2
+	);
+
+}
+
 function escapeHtml( text ) {
 
 	return String( text ).replace( /[&<>"']/g, ch => ( {
@@ -116,6 +131,7 @@ function showStartCard() {
 		'<span><b>Sol tık (basılı)</b> Ağ at ve sallan</span>' +
 		'<span><b>Bırak</b> Ağı kop, momentumla fırla</span>' +
 		'<span><b>R</b> Zemine geri dön (takılırsan)</span>' +
+		'<span><b>T</b> Tanı raporu (3D mi, ölç)</span>' +
 		'<span><b>Nişangah</b> yeşil = ağ atılabilir</span>' +
 		'<span><b>Esc</b> İmleci serbest bırak</span>' +
 		'</div>'
@@ -218,6 +234,9 @@ function tick( now ) {
 
 		// Takılırsan / zemine gömülürsen R ile yüzeye geri dön.
 		if ( input.wasPressed( 'KeyR' ) ) reground( true );
+
+		// T: sahnenin gerçek durumunu ölç ve konsola yaz.
+		if ( input.wasPressed( 'KeyT' ) ) dumpDiagnostics();
 
 		if ( settleTimer > 0 ) {
 
