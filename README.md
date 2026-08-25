@@ -78,6 +78,29 @@ Anahtar için Google Cloud'da **Map Tiles API**'yi etkinleştirin. Anahtar
 tarayıcı paketine gömülür; Cloud Console'dan **HTTP referrer** kısıtı koyun ve
 **kota tavanı** tanımlayın.
 
+## Ağ neden takılmıyor? — nişangah göstergesi
+
+Nişangah, o an bakılan noktanın ağ atmaya uygun olup olmadığını renkle söyler
+ve HUD'da sayısal karşılığını yazar:
+
+| Renk | Anlam |
+| --- | --- |
+| Beyaz | Menzilde (`maxRange`, 160 m) yüzey yok |
+| Sarı | Yüzey var ama karakterden 3 m'den az yukarıda — sarkaç kurulamaz |
+| Yeşil | Ağ atılabilir |
+| Kırmızı | Ağ takılı, sallanıyorsun |
+
+Sarı en sık görülen durumdur: **çatıda duruyorsanız** çevrenizde daha yüksek
+bir yapı olmayabilir. Sarkaç için çapanın belirgin şekilde yukarıda olması
+gerekir, yoksa kendinizi zemine çekersiniz.
+
+Havadan başlayıp doğrudan sallanmayı denemek için:
+
+```
+?yukseklik=150            # zeminin 150 m üstünde başla
+?konum=newyork&yukseklik=200   # Manhattan — sallanmak için en uygun geometri
+```
+
 ## Detay seviyesi (LOD) — binaların 3D görünmesi
 
 ```

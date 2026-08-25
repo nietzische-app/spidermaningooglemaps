@@ -79,6 +79,8 @@ const rig = new CameraRig( camera );
 const spawnPoint = new Vector3();
 let spawned = false;
 let settleTimer = 0;
+let aimFrame = 0;
+let aimInfo = null;
 
 input.onLockChange = locked => {
 
@@ -114,6 +116,7 @@ function showStartCard() {
 		'<span><b>Sol tık (basılı)</b> Ağ at ve sallan</span>' +
 		'<span><b>Bırak</b> Ağı kop, momentumla fırla</span>' +
 		'<span><b>R</b> Zemine geri dön (takılırsan)</span>' +
+		'<span><b>Nişangah</b> yeşil = ağ atılabilir</span>' +
 		'<span><b>Esc</b> İmleci serbest bırak</span>' +
 		'</div>'
 	);
@@ -157,7 +160,10 @@ function trySpawn() {
 	const ground = Player.findGround( world, 0, 0, SPAWN_PROBE_HEIGHT );
 	if ( ! ground ) return;
 
-	spawnPoint.copy( ground ).setY( ground.y + 0.05 );
+	// ?yukseklik=120 → zeminin 120 m üstünde başla. Sarkacı denemek için
+	// en pratik yol: yerde dururken çevrende yeterince yüksek yapı olmayabilir.
+	const lift = parseFloat( params.get( 'yukseklik' ) );
+	spawnPoint.copy( ground ).setY( ground.y + 0.05 + ( Number.isFinite( lift ) ? lift : 0 ) );
 	player.position.copy( spawnPoint );
 	player.velocity.set( 0, 0, 0 );
 	rig.reset();
@@ -224,6 +230,13 @@ function tick( now ) {
 		swing.applyConstraint( player, dt, input );
 		swing.updateVisual( player );
 
+		// Nişangah geri bildirimi. Işın maliyetli olduğu için seyreltiliyor.
+		if ( ++ aimFrame % 3 === 0 ) {
+
+			aimInfo = swing.attached ? null : swing.probe( camera, world, player );
+
+		}
+
 		// İp kısıtı karakteri geometriye itmiş olabilir.
 		player.resolve( world );
 		player.object.position.copy( player.position );
@@ -237,6 +250,7 @@ function tick( now ) {
 	renderer.render( scene, camera );
 
 	hud.setSwinging( swing.attached );
+	if ( ! swing.attached ) hud.setAim( aimInfo );
 	hud.setTelemetry( player, swing.attached, spawned, world.visibleTileCount );
 	if ( world.tiles ) hud.setAttribution( world.getAttributions( [] ) );
 

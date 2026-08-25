@@ -16,6 +16,7 @@ const _dir = new Vector3();
 const _tangent = new Vector3();
 const _camDir = new Vector3();
 const _hit = makeHit();
+const _probeHit = makeHit();
 
 export class Swing {
 
@@ -71,6 +72,35 @@ export class Swing {
 		this.marker.position.copy( this.anchor );
 
 		return true;
+
+	}
+
+	/**
+	 * Nişangahın o an neyi gösterdiğini söyler — ağın neden takılmadığını
+	 * görünür kılar. Her karede değil, main içinde seyreltilerek çağrılır.
+	 * @returns {{state:string, distance:number, rise:number}}
+	 */
+	probe( camera, world, player ) {
+
+		camera.getWorldDirection( _camDir );
+		player.getCenter( _center );
+
+		if ( ! world.raycast( _center, _camDir, SWING.maxRange, _probeHit ) ) {
+
+			return { state: 'yok', distance: 0, rise: 0 };
+
+		}
+
+		const distance = _probeHit.point.distanceTo( _center );
+		const rise = _probeHit.point.y - player.position.y;
+
+		// tryAttach ile aynı koşul: çapa karakterin belirgin şekilde üstünde
+		// olmalı, yoksa sarkaç yerine kendini zemine çekersin.
+		return {
+			state: rise < 3 ? 'alcak' : 'uygun',
+			distance,
+			rise,
+		};
 
 	}
 

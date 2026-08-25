@@ -60,6 +60,16 @@ body {
 	height: 18px;
 }
 
+#crosshair.alcak::before,
+#crosshair.alcak::after {
+	background: #ffc857;
+}
+
+#crosshair.uygun::before,
+#crosshair.uygun::after {
+	background: #4ade80;
+}
+
 #crosshair.active::before,
 #crosshair.active::after {
 	background: #ff4d5e;
@@ -84,12 +94,17 @@ body {
 	font-size: 13px;
 }
 
-#telemetry {
+#telemetry,
+#aim {
 	display: block;
 	margin-top: 2px;
 	color: rgba(232, 238, 245, 0.62);
 	font-variant-numeric: tabular-nums;
 	font-size: 11px;
+}
+
+#aim {
+	color: rgba(232, 238, 245, 0.5);
 }
 
 /* Google, Photorealistic 3D Tiles kullanan uygulamaların telif bilgisini

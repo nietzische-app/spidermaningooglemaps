@@ -4,6 +4,7 @@ export class Hud {
 	constructor() {
 
 		this.crosshair = document.getElementById( 'crosshair' );
+		this.aim = document.getElementById( 'aim' );
 		this.overlay = document.getElementById( 'overlay' );
 		this.overlayBody = document.getElementById( 'overlay-body' );
 		this.place = document.getElementById( 'place' );
@@ -13,6 +14,7 @@ export class Hud {
 		this._overlayPriority = - 1;
 		this._lastAttribution = '';
 		this._lastTelemetry = '';
+		this._lastAim = '';
 
 	}
 
@@ -45,6 +47,40 @@ export class Hud {
 	setSwinging( active ) {
 
 		this.crosshair.classList.toggle( 'active', active );
+
+	}
+
+	// Nişangah rengi: beyaz = menzilde hedef yok, sarı = hedef var ama çok
+	// alçak (sarkaç kurulamaz), yeşil = ağ atılabilir.
+	setAim( info ) {
+
+		const cls = info ? info.state : 'yok';
+		this.crosshair.classList.remove( 'yok', 'alcak', 'uygun' );
+		this.crosshair.classList.add( cls );
+
+		let text;
+		if ( ! info || info.state === 'yok' ) {
+
+			text = 'Nişan: menzilde yüzey yok';
+
+		} else if ( info.state === 'alcak' ) {
+
+			text = `Nişan: ${ Math.round( info.distance ) } m ötede, ` +
+				`${ Math.round( info.rise ) } m yukarıda — ağ için çok alçak`;
+
+		} else {
+
+			text = `Nişan: ${ Math.round( info.distance ) } m ötede, ` +
+				`${ Math.round( info.rise ) } m yukarıda ✓`;
+
+		}
+
+		if ( text !== this._lastAim ) {
+
+			this._lastAim = text;
+			this.aim.textContent = text;
+
+		}
 
 	}
 
