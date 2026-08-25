@@ -1,156 +1,105 @@
-import {
-	MathUtils,
-	PerspectiveCamera,
-	Scene,
-	Vector3,
-	WebGLRenderer,
-} from 'three';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { GlobeControls, TilesRenderer } from '3d-tiles-renderer';
-import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
-import {
-	GLTFExtensionsPlugin,
-	TileCompressionPlugin,
-	TilesFadePlugin,
-} from '3d-tiles-renderer/plugins';
+import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { CAMERA, LOCATIONS, SPAWN_PROBE_HEIGHT } from './config.js';
+import { CameraRig } from './cameraRig.js';
+import { Hud } from './hud.js';
+import { Input } from './input.js';
+import { Player } from './player.js';
+import { Swing } from './swing.js';
+import { World } from './world.js';
 
 // Anahtar normalde .env dosyasından gelir. Derlenmiş bir yapıyı hızlıca
 // denemek için ?key=... parametresi de kabul edilir; URL'ler geçmişe ve
 // referrer başlıklarına sızdığı için bunu kalıcı dağıtımda kullanmayın.
 // Ayrıca bu okuma sayesinde anahtar derleme sırasında sabite katlanmıyor,
 // yani .env olmadan alınan bir build sessizce boş bir sayfaya dönüşmüyor.
-function readApiKey() {
-
-	return new URLSearchParams( window.location.search ).get( 'key' )
-		|| import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-		|| '';
-
-}
-
-const API_KEY = readApiKey();
-
-// Başlangıçta bakılacak yerler. `?konum=newyork` ile seçilir.
-const LOCATIONS = {
-	istanbul: { lat: 41.0256, lon: 28.9744, label: 'İstanbul — Galata' },
-	newyork: { lat: 40.7484, lon: -73.9857, label: 'New York — Empire State' },
-	paris: { lat: 48.8584, lon: 2.2945, label: 'Paris — Eyfel Kulesi' },
-	tokyo: { lat: 35.6586, lon: 139.7454, label: 'Tokyo — Tokyo Tower' },
-};
-
-// Kameranın hedef noktaya göre yüksekliği ve yatay uzaklığı (metre).
-const CAMERA_HEIGHT = 900;
-const CAMERA_DISTANCE = 1400;
+const params = new URLSearchParams( window.location.search );
+const API_KEY = params.get( 'key' ) || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const USE_MOCK = params.get( 'mock' ) === '1' || ! API_KEY;
 
 const canvas = document.getElementById( 'scene' );
-const placeEl = document.getElementById( 'place' );
-const attributionEl = document.getElementById( 'attribution' );
-const overlayEl = document.getElementById( 'overlay' );
+const hud = new Hud();
 
-let renderer, scene, camera, controls, tiles;
+const renderer = new WebGLRenderer( { canvas, antialias: true } );
+renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
+renderer.setSize( window.innerWidth, window.innerHeight );
 
-// Karo yüklendi mi? Açılıştaki hata bildirimini yalnızca hiç karo
-// gelmediyse göstermek için izliyoruz.
-let anyTileLoaded = false;
-let overlayShown = false;
+const scene = new Scene();
+const camera = new PerspectiveCamera(
+	CAMERA.fov,
+	window.innerWidth / window.innerHeight,
+	0.5,
+	100000
+);
+camera.position.set( 0, 320, 320 );
 
-// Telif metni her karede yeniden hesaplanıyor; çöp üretmemek için
-// dizi tekrar tekrar kullanılıyor.
-const attributions = [];
-let lastAttribution = '';
+const world = new World( scene );
+const location = resolveLocation();
 
-if ( ! API_KEY ) {
+if ( USE_MOCK ) {
 
-	showOverlay(
-		'<div class="box"><strong>Google Maps API anahtarı bulunamadı.</strong><br />' +
-		'Proje kökünde bir <code>.env</code> dosyası oluşturup ' +
-		'<code>VITE_GOOGLE_MAPS_API_KEY=anahtarınız</code> satırını ekleyin, ' +
-		'ardından geliştirme sunucusunu yeniden başlatın.<br /><br />' +
-		'Anahtarın bağlı olduğu projede <em>Map Tiles API</em> etkin olmalıdır.</div>'
-	);
+	world.initMock();
+	hud.setPlace( API_KEY ? 'Prova şehri (mock)' : 'Prova şehri — API anahtarı yok' );
 
 } else {
 
-	init();
-	animate();
+	world.initTiles( API_KEY, location );
+	world.tiles.setCamera( camera );
+	hud.setPlace( location.label );
+
+	world.onError = () => {
+
+		hud.showOverlay(
+			'<strong>Karolar yüklenemedi.</strong><br />' +
+			'API anahtarını ve Google Cloud projesinde <em>Map Tiles API</em>\'nin ' +
+			'etkin olup olmadığını kontrol edin.<br /><br />' +
+			'Mekanikleri anahtarsız denemek için <code>?mock=1</code> ekleyin.'
+		);
+
+	};
 
 }
 
-function init() {
+const input = new Input( canvas );
+const player = new Player( scene );
+const swing = new Swing( scene );
+const rig = new CameraRig( camera );
 
-	renderer = new WebGLRenderer( { canvas, antialias: true } );
-	renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
-	renderer.setSize( window.innerWidth, window.innerHeight );
+const spawnPoint = new Vector3();
+let spawned = false;
 
-	scene = new Scene();
+input.onLockChange = locked => {
 
-	// Dünya ölçeğinde çalıştığımız için far düzlemi çok uzakta; near/far
-	// değerlerini her karede GlobeControls sahneye göre yeniden ayarlıyor.
-	camera = new PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1.6e8 );
+	if ( locked ) hud.hideOverlay();
+	else showStartCard();
 
-	// Google'ın 3D Tiles glTF'leri Draco ile sıkıştırılmış geliyor. three r185'te
-	// DRACOLoader çözücü dosyalarını import.meta.url üzerinden kendisi
-	// referansladığı için Vite onları otomatik paketliyor; setDecoderPath()
-	// ya da harici bir CDN gerekmiyor.
-	const dracoLoader = new DRACOLoader();
+};
 
-	tiles = new TilesRenderer();
-	// URL'yi ve oturum anahtarını GoogleCloudAuthPlugin ayarlıyor.
-	tiles.registerPlugin( new GoogleCloudAuthPlugin( {
-		apiToken: API_KEY,
-		autoRefreshToken: true,
-	} ) );
-	tiles.registerPlugin( new GLTFExtensionsPlugin( { dracoLoader } ) );
-	tiles.registerPlugin( new TileCompressionPlugin() );
-	tiles.registerPlugin( new TilesFadePlugin() );
+// Tarayıcı konsolundan sahneyi kurcalamak için: game.player.velocity vb.
+window.game = { renderer, scene, camera, world, player, swing, rig, input };
 
-	tiles.setCamera( camera );
-	scene.add( tiles.group );
+showStartCard();
+window.addEventListener( 'resize', onResize );
+renderer.setAnimationLoop( tick );
 
-	tiles.addEventListener( 'load-model', () => {
+function showStartCard() {
 
-		anyTileLoaded = true;
-		hideOverlay();
-
-	} );
-
-	tiles.addEventListener( 'load-error', ( { error } ) => {
-
-		console.error( '3D Tiles yüklenemedi:', error );
-
-		// Tek tük karo hatası sahneyi kapatmasın; yalnızca hiçbir şey
-		// yüklenemediyse (tipik olarak anahtar/yetki sorunu) uyarı göster.
-		if ( ! anyTileLoaded ) {
-
-			showOverlay(
-				'<div class="box"><strong>Karolar yüklenemedi.</strong><br />' +
-				'API anahtarını ve Google Cloud projesinde <em>Map Tiles API</em>\'nin ' +
-				'etkin olup olmadığını kontrol edin. Ayrıntı için tarayıcı konsoluna bakın.</div>'
-			);
-
-		}
-
-	} );
-
-	// Fare ile 360° dönüş, eğim, kaydırma ve imlece yakınlaşma.
-	controls = new GlobeControls( scene, camera, canvas );
-	controls.enableDamping = true;
-	controls.setEllipsoid( tiles.ellipsoid, tiles.group );
-
-	const location = resolveLocation();
-	placeCamera( location );
-	placeEl.textContent = location.label;
-
-	window.addEventListener( 'resize', onResize );
-
-	// Tarayıcı konsolundan sahneyi kurcalamak için: mapScene.camera.position vb.
-	window.mapScene = { renderer, scene, camera, controls, tiles };
+	hud.showOverlay(
+		'<strong>Başlamak için tıklayın</strong>' +
+		'<div class="keys">' +
+		'<span><b>Fare</b> Kamerayı döndür</span>' +
+		'<span><b>W A S D</b> Koş</span>' +
+		'<span><b>Shift</b> Hızlan</span>' +
+		'<span><b>Space</b> Zıpla</span>' +
+		'<span><b>Sol tık (basılı)</b> Ağ at ve sallan</span>' +
+		'<span><b>Bırak</b> Ağı kop, momentumla fırla</span>' +
+		'<span><b>Esc</b> İmleci serbest bırak</span>' +
+		'</div>'
+	);
 
 }
 
-// `?konum=` parametresini ya da doğrudan `?lat=..&lon=..` çiftini okur.
 function resolveLocation() {
 
-	const params = new URLSearchParams( window.location.search );
 	const lat = parseFloat( params.get( 'lat' ) );
 	const lon = parseFloat( params.get( 'lon' ) );
 
@@ -165,30 +114,6 @@ function resolveLocation() {
 
 }
 
-// Kamerayı verilen enlem/boylamdaki yüzey noktasının güneyine ve üstüne
-// yerleştirip o noktaya baktırır; "up" yönü yerel dikey olur.
-function placeCamera( { lat, lon } ) {
-
-	const latRad = MathUtils.degToRad( lat );
-	const lonRad = MathUtils.degToRad( lon );
-
-	const surface = new Vector3();
-	const north = new Vector3();
-	const up = new Vector3();
-	const east = new Vector3(); // kullanılmıyor, API'nin zorunlu çıkış parametresi
-
-	tiles.ellipsoid.getCartographicToPosition( latRad, lonRad, 0, surface );
-	tiles.ellipsoid.getEastNorthUpAxes( latRad, lonRad, east, north, up );
-
-	camera.position
-		.copy( surface )
-		.addScaledVector( up, CAMERA_HEIGHT )
-		.addScaledVector( north, - CAMERA_DISTANCE );
-	camera.up.copy( up );
-	camera.lookAt( surface );
-
-}
-
 function onResize() {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -198,56 +123,62 @@ function onResize() {
 
 }
 
-function animate() {
+// Karolar akış hâlinde yüklendiği için zemin ilk karede hazır olmayabilir:
+// yukarıdan aşağı ışın tutana kadar her karede yeniden denenir.
+function trySpawn() {
 
-	requestAnimationFrame( animate );
+	const ground = Player.findGround( world, 0, 0, SPAWN_PROBE_HEIGHT );
+	if ( ! ground ) return;
 
-	// Sıra önemli: kontroller kamerayı (ve near/far'ı) günceller, sonra
-	// güncel matrisle karo seçimi yapılır.
-	controls.update();
-	camera.updateMatrixWorld();
-
-	tiles.setResolutionFromRenderer( camera, renderer );
-	tiles.update();
-
-	renderer.render( scene, camera );
-
-	updateAttribution();
+	spawnPoint.copy( ground ).setY( ground.y + 0.05 );
+	player.position.copy( spawnPoint );
+	player.velocity.set( 0, 0, 0 );
+	rig.reset();
+	spawned = true;
 
 }
 
-function updateAttribution() {
+let last = performance.now();
 
-	attributions.length = 0;
-	tiles.getAttributions( attributions );
+function tick( now ) {
 
-	const text = attributions
-		.filter( item => item.type === 'string' )
-		.map( item => item.value )
-		.join( ' · ' );
+	// Sekme arka plandayken biriken devasa dt fiziği patlatmasın.
+	const dt = Math.min( 0.05, ( now - last ) / 1000 ) || 0;
+	last = now;
 
-	if ( text !== lastAttribution ) {
+	world.update( camera, renderer );
 
-		lastAttribution = text;
-		attributionEl.textContent = text;
+	if ( ! spawned ) {
+
+		trySpawn();
+
+	} else {
+
+		swing.syncCameraDirection( camera );
+
+		if ( input.leftPressed ) swing.tryAttach( camera, world, player );
+		if ( input.leftReleased ) swing.release( player );
+
+		player.update( dt, input, rig.yaw, world, swing.attached );
+		swing.applyConstraint( player, dt, input );
+		swing.updateVisual( player );
+
+		// İp kısıtı karakteri geometriye itmiş olabilir.
+		player.resolve( world );
+		player.object.position.copy( player.position );
+
+		if ( player.checkRespawn( spawnPoint ) ) rig.reset();
 
 	}
 
-}
+	rig.update( dt, input, player, world );
 
-function hideOverlay() {
+	renderer.render( scene, camera );
 
-	overlayShown = false;
-	overlayEl.hidden = true;
+	hud.setSwinging( swing.attached );
+	hud.setTelemetry( player, swing.attached, spawned );
+	if ( world.tiles ) hud.setAttribution( world.getAttributions( [] ) );
 
-}
-
-function showOverlay( html ) {
-
-	if ( overlayShown ) return;
-
-	overlayShown = true;
-	overlayEl.innerHTML = html;
-	overlayEl.hidden = false;
+	input.endFrame();
 
 }

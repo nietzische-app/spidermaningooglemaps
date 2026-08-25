@@ -23,16 +23,55 @@ body {
 	width: 100%;
 	height: 100%;
 	touch-action: none;
+	cursor: crosshair;
+}
+
+/* Nişangah — ağ atma yönü. Bağlanınca kırmızıya döner. */
+#crosshair {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 18px;
+	height: 18px;
+	margin: -9px 0 0 -9px;
+	pointer-events: none;
+	opacity: 0.85;
+}
+
+#crosshair::before,
+#crosshair::after {
+	content: "";
+	position: absolute;
+	background: #e8eef5;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+}
+
+#crosshair::before {
+	top: 8px;
+	left: 0;
+	width: 18px;
+	height: 2px;
+}
+
+#crosshair::after {
+	top: 0;
+	left: 8px;
+	width: 2px;
+	height: 18px;
+}
+
+#crosshair.active::before,
+#crosshair.active::after {
+	background: #ff4d5e;
 }
 
 #hud {
 	position: fixed;
 	top: 16px;
 	left: 16px;
-	max-width: 260px;
-	padding: 12px 14px;
+	padding: 10px 14px;
 	border-radius: 10px;
-	background: rgba(11, 15, 20, 0.72);
+	background: rgba(11, 15, 20, 0.68);
 	border: 1px solid rgba(232, 238, 245, 0.14);
 	backdrop-filter: blur(6px);
 	font-size: 12px;
@@ -45,18 +84,12 @@ body {
 	font-size: 13px;
 }
 
-#hud .sub {
+#telemetry {
 	display: block;
-	margin: 2px 0 6px;
-	color: rgba(232, 238, 245, 0.6);
+	margin-top: 2px;
+	color: rgba(232, 238, 245, 0.62);
+	font-variant-numeric: tabular-nums;
 	font-size: 11px;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-}
-
-#hud ul {
-	margin: 0;
-	padding-left: 16px;
 }
 
 /* Google, Photorealistic 3D Tiles kullanan uygulamaların telif bilgisini
@@ -80,25 +113,44 @@ body {
 	display: grid;
 	place-items: center;
 	padding: 24px;
-	background: rgba(11, 15, 20, 0.78);
+	background: rgba(11, 15, 20, 0.72);
 	font-size: 14px;
 	line-height: 1.6;
-	/* Bilgi katmanı kamerayı bloklamasın: fare olayları alttaki tuvale geçer,
-	   yalnızca kartın kendisi tıklanabilir kalır. */
+	/* Kartın dışı tıklamayı tuvale geçirir: tek tıkla oyuna girilir. */
 	pointer-events: none;
-}
-
-#overlay .box {
-	max-width: 560px;
-	pointer-events: auto;
-	padding: 18px 20px;
-	border-radius: 12px;
-	background: rgba(11, 15, 20, 0.92);
-	border: 1px solid rgba(232, 238, 245, 0.16);
 }
 
 #overlay[hidden] {
 	display: none;
+}
+
+#overlay .box {
+	max-width: 520px;
+	padding: 20px 24px;
+	border-radius: 12px;
+	background: rgba(11, 15, 20, 0.92);
+	border: 1px solid rgba(232, 238, 245, 0.16);
+	text-align: center;
+}
+
+#overlay strong {
+	font-size: 16px;
+}
+
+#overlay .keys {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 4px;
+	margin-top: 14px;
+	text-align: left;
+	font-size: 12.5px;
+	color: rgba(232, 238, 245, 0.78);
+}
+
+#overlay .keys b {
+	display: inline-block;
+	min-width: 118px;
+	color: #e8eef5;
 }
 
 #overlay code {
