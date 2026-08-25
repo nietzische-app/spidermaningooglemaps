@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="tr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+		<title>Three.js × Google Photorealistic 3D Tiles</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body>
+		<canvas id="scene"></canvas>
+
+		<div id="hud">
+			<strong id="place"></strong>
+			<span class="sub">Kamera kontrolleri</span>
+			<ul>
+				<li><b>Sol tuş + sürükle</b> — haritada kaydır</li>
+				<li><b>Sağ tuş + sürükle</b> — 360° döndür / eğ</li>
+				<li><b>Tekerlek</b> — imlecin olduğu noktaya yakınlaş</li>
+			</ul>
+		</div>
+
+		<div id="attribution"></div>
+		<div id="overlay" hidden></div>
+
+		<script type="module" src="./src/main.js"></script>
+	</body>
+</html>

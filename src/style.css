@@ -1,0 +1,109 @@
+:root {
+	color-scheme: dark;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: #0b0f14;
+	color: #e8eef5;
+}
+
+#scene {
+	display: block;
+	width: 100%;
+	height: 100%;
+	touch-action: none;
+}
+
+#hud {
+	position: fixed;
+	top: 16px;
+	left: 16px;
+	max-width: 260px;
+	padding: 12px 14px;
+	border-radius: 10px;
+	background: rgba(11, 15, 20, 0.72);
+	border: 1px solid rgba(232, 238, 245, 0.14);
+	backdrop-filter: blur(6px);
+	font-size: 12px;
+	line-height: 1.5;
+	pointer-events: none;
+}
+
+#hud strong {
+	display: block;
+	font-size: 13px;
+}
+
+#hud .sub {
+	display: block;
+	margin: 2px 0 6px;
+	color: rgba(232, 238, 245, 0.6);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+#hud ul {
+	margin: 0;
+	padding-left: 16px;
+}
+
+/* Google, Photorealistic 3D Tiles kullanan uygulamaların telif bilgisini
+   ekranda göstermesini şart koşuyor; bu satırı kaldırmayın. */
+#attribution {
+	position: fixed;
+	right: 8px;
+	bottom: 6px;
+	left: 8px;
+	text-align: right;
+	font-size: 10px;
+	line-height: 1.4;
+	color: rgba(232, 238, 245, 0.85);
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+	pointer-events: none;
+}
+
+#overlay {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	padding: 24px;
+	background: rgba(11, 15, 20, 0.78);
+	font-size: 14px;
+	line-height: 1.6;
+	/* Bilgi katmanı kamerayı bloklamasın: fare olayları alttaki tuvale geçer,
+	   yalnızca kartın kendisi tıklanabilir kalır. */
+	pointer-events: none;
+}
+
+#overlay .box {
+	max-width: 560px;
+	pointer-events: auto;
+	padding: 18px 20px;
+	border-radius: 12px;
+	background: rgba(11, 15, 20, 0.92);
+	border: 1px solid rgba(232, 238, 245, 0.16);
+}
+
+#overlay[hidden] {
+	display: none;
+}
+
+#overlay code {
+	padding: 1px 5px;
+	border-radius: 4px;
+	background: rgba(232, 238, 245, 0.12);
+	font-size: 13px;
+}
