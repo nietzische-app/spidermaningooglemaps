@@ -6,6 +6,27 @@ export const LOCATIONS = {
 	tokyo: { lat: 35.6586, lon: 139.7454, label: 'Tokyo — Tokyo Tower' },
 };
 
+// Karo detay (LOD) ayarları.
+export const TILES = {
+	// Ekran-uzayı hata eşiği (piksel). Bir karo, izdüşen geometrik hatası bu
+	// değeri aştığında bir alt seviyeye bölünür — yani KÜÇÜK değer = DAHA ÇOK
+	// detay = daha çok istek ve daha çok fatura.
+	//
+	// GoogleCloudAuthPlugin varsayılan olarak bunu 20 yapar; şehrin üstünde
+	// uçmak için makul ama sokak seviyesinde binalar hiç ayrışmaz, harita
+	// bulanık düz bir levha gibi kalır ve ağ atacak geometri oluşmaz.
+	errorTarget: 5,
+
+	// Karakter, en az bu kadar karo görünür olmadan doğmaz. Aksi hâlde kaba
+	// (düşük detaylı) yüzeye basar, detay gelince binaların içinde kalır.
+	spawnMinTiles: 12,
+
+	// Doğduktan sonra bu süre boyunca zemin yeniden yoklanır: karolar
+	// inceldikçe gerçek zemin yükselir ve karakterin altından kayar.
+	settleTime: 5,
+	settleProbeHeight: 60,
+};
+
 // Karakter fiziği. Gerçekçi değil, oynanabilir olacak şekilde ayarlandı:
 // yerçekimi gerçek dünyanın ~2.5 katı, yoksa sarkaç hareketi ağır çekim gibi durur.
 export const PHYSICS = {

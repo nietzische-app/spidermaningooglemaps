@@ -16,6 +16,7 @@ gerçek binalara ağ atıp sarkaç gibi sallanan bir 3. şahıs karakter kontrol
 | **Sol tık (basılı tut)** | Nişangahtaki noktaya ağ at ve sallan |
 | **Sol tık (bırak)** | Ağı kop, kazanılan momentumla fırla |
 | **W (sallanırken)** | Salınımı pompala (ivme kazan) |
+| **R** | Zemine geri dön (gömülürsen) |
 | **Esc** | İmleci serbest bırak |
 
 ## Prova şehri — kota harcamadan geliştirme
@@ -77,6 +78,27 @@ Anahtar için Google Cloud'da **Map Tiles API**'yi etkinleştirin. Anahtar
 tarayıcı paketine gömülür; Cloud Console'dan **HTTP referrer** kısıtı koyun ve
 **kota tavanı** tanımlayın.
 
+## Detay seviyesi (LOD) — binaların 3D görünmesi
+
+```
+?detay=5     # varsayılan, sokak seviyesi
+?detay=2     # daha keskin, belirgin şekilde daha çok istek
+?detay=20    # kuş bakışı için yeterli, sokakta bulanık düz levha
+```
+
+`errorTarget`, ekran-uzayı hata eşiğidir (piksel): bir karo, izdüşen geometrik
+hatası bu değeri aştığında bir alt seviyeye bölünür. **Küçük değer = daha çok
+detay = daha çok karo isteği = daha çok fatura.**
+
+`GoogleCloudAuthPlugin`, `useRecommendedSettings` varsayılan açıkken bunu
+sessizce **20** yapar. Şehrin üstünde uçmak için makul, ama sokak seviyesinde
+binalar hiç ayrışmaz: harita bulanık düz bir levha olarak kalır ve ağ atacak
+geometri oluşmaz. Bu yüzden seçenek kapatılıp değer `src/config.js`'te
+açıkça belirleniyor.
+
+Detayı artırmadan önce Cloud Console'da **kota tavanınızın** ayarlı olduğundan
+emin olun.
+
 ## Başlangıç konumu
 
 ```
@@ -107,10 +129,14 @@ Fiziği `src/config.js`'ten ayarlayın — yerçekimi gerçeğin ~2.5 katı
   çıkıntılarda ve ince geometride takılma olabilir. `_depenetrate()` ışınları
   tek yüzlü meshlerde her zaman isabet etmediği için garanti değil, destekleyici
   önlemdir.
-- **Karolar akış hâlinde yüklenir.** Yüklenmeden önce zemin *yoktur*; karakter
-  bu yüzden zemini ışınla bulana kadar bekletilir, düşerse `respawnBelow`
-  eşiğinde başlangıç noktasına döner. Karoların yetişemediği hızda uçarsanız
-  kısa süreli boşluğa düşebilirsiniz.
+- **Karolar akış hâlinde ve kabadan inceye yüklenir.** İlk gelen karo şehrin
+  düşük detaylı hâlidir; karakter `spawnMinTiles` kadar karo görünür olmadan
+  doğmaz, yoksa kaba yüzeye basıp detay gelince binaların içinde kalır.
+  Doğuştan sonra `settleTime` boyunca zemin yeniden yoklanır ve karakter
+  yükselen yüzeye kaldırılır. Yine de gömülü kalırsanız **R** ile yüzeye
+  dönebilirsiniz.
+- Karoların yetişemediği hızda uçarsanız kısa süreli boşluğa düşebilirsiniz;
+  `respawnBelow` eşiğinde başlangıç noktasına dönersiniz.
 - **Ağ, çapanın bulunduğu yüzeye çarpabilir.** Doğrudan önünüzdeki duvara
   bağlanıp üstüne salınırsanız duvara yapışırsınız; bu durumda ağ ~0.45 saniye
   sonra kendiliğinden kopar (`stallTime`).

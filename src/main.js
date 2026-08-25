@@ -1,5 +1,5 @@
 import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
-import { CAMERA, LOCATIONS, SPAWN_PROBE_HEIGHT } from './config.js';
+import { CAMERA, LOCATIONS, SPAWN_PROBE_HEIGHT, TILES } from './config.js';
 import { CameraRig } from './cameraRig.js';
 import { Hud } from './hud.js';
 import { Input } from './input.js';
@@ -42,7 +42,12 @@ if ( USE_MOCK ) {
 
 } else {
 
-	world.initTiles( API_KEY, location );
+	const detay = parseFloat( params.get( 'detay' ) );
+	world.initTiles(
+		API_KEY,
+		location,
+		Number.isFinite( detay ) ? detay : TILES.errorTarget
+	);
 	world.tiles.setCamera( camera );
 	hud.setPlace( location.label );
 
@@ -66,6 +71,7 @@ const rig = new CameraRig( camera );
 
 const spawnPoint = new Vector3();
 let spawned = false;
+let settleTimer = 0;
 
 input.onLockChange = locked => {
 
@@ -92,6 +98,7 @@ function showStartCard() {
 		'<span><b>Space</b> Zıpla</span>' +
 		'<span><b>Sol tık (basılı)</b> Ağ at ve sallan</span>' +
 		'<span><b>Bırak</b> Ağı kop, momentumla fırla</span>' +
+		'<span><b>R</b> Zemine geri dön (takılırsan)</span>' +
 		'<span><b>Esc</b> İmleci serbest bırak</span>' +
 		'</div>'
 	);
@@ -127,6 +134,11 @@ function onResize() {
 // yukarıdan aşağı ışın tutana kadar her karede yeniden denenir.
 function trySpawn() {
 
+	// Yalnızca zemin bulmak yetmez: ilk gelen karo şehrin kaba hâlidir.
+	// Yeterince karo görünür olmadan doğarsak, detay yüklendiğinde karakter
+	// binaların içinde kalır.
+	if ( world.tiles && world.visibleTileCount < TILES.spawnMinTiles ) return;
+
 	const ground = Player.findGround( world, 0, 0, SPAWN_PROBE_HEIGHT );
 	if ( ! ground ) return;
 
@@ -135,6 +147,30 @@ function trySpawn() {
 	player.velocity.set( 0, 0, 0 );
 	rig.reset();
 	spawned = true;
+	settleTimer = TILES.settleTime;
+
+}
+
+// Karolar inceldikçe gerçek zemin yükselir. Doğuştan sonraki kısa pencerede
+// karakteri yukarıdan yokla ve gerekiyorsa yeni yüzeye kaldır — yoksa
+// binanın içine gömülü kalır.
+function reground( force ) {
+
+	const ground = Player.findGround(
+		world,
+		player.position.x,
+		player.position.z,
+		player.position.y + TILES.settleProbeHeight
+	);
+	if ( ! ground ) return;
+
+	if ( force || ground.y > player.position.y + 0.5 ) {
+
+		player.position.y = ground.y + 0.05;
+		player.velocity.set( 0, 0, 0 );
+		spawnPoint.copy( player.position );
+
+	}
 
 }
 
@@ -159,6 +195,16 @@ function tick( now ) {
 		if ( input.leftPressed ) swing.tryAttach( camera, world, player );
 		if ( input.leftReleased ) swing.release( player );
 
+		// Takılırsan / zemine gömülürsen R ile yüzeye geri dön.
+		if ( input.wasPressed( 'KeyR' ) ) reground( true );
+
+		if ( settleTimer > 0 ) {
+
+			settleTimer -= dt;
+			if ( player.grounded && ! swing.attached ) reground( false );
+
+		}
+
 		player.update( dt, input, rig.yaw, world, swing.attached );
 		swing.applyConstraint( player, dt, input );
 		swing.updateVisual( player );
@@ -176,7 +222,7 @@ function tick( now ) {
 	renderer.render( scene, camera );
 
 	hud.setSwinging( swing.attached );
-	hud.setTelemetry( player, swing.attached, spawned );
+	hud.setTelemetry( player, swing.attached, spawned, world.visibleTileCount );
 	if ( world.tiles ) hud.setAttribution( world.getAttributions( [] ) );
 
 	input.endFrame();

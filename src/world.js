@@ -15,6 +15,7 @@ import {
 } from 'three';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TilesRenderer } from '3d-tiles-renderer';
+import { TILES } from './config.js';
 import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
 import {
 	GLTFExtensionsPlugin,
@@ -74,14 +75,17 @@ export class World {
 	 * koordinatlarında (dünya merkezinden ~6.3 milyon metre uzakta, yerçekimi
 	 * eğik) değil, sıradan bir yerel oyun uzayında çalışır.
 	 */
-	initTiles( apiKey, location ) {
+	initTiles( apiKey, location, errorTarget = TILES.errorTarget ) {
 
 		const tiles = new TilesRenderer();
 		this.tiles = tiles;
 
+		// useRecommendedSettings kapalı: bu seçenek errorTarget'ı sessizce 20
+		// yapıyor. Değeri aşağıda kendimiz belirliyoruz.
 		tiles.registerPlugin( new GoogleCloudAuthPlugin( {
 			apiToken: apiKey,
 			autoRefreshToken: true,
+			useRecommendedSettings: false,
 		} ) );
 		tiles.registerPlugin( new GLTFExtensionsPlugin( { dracoLoader: new DRACOLoader() } ) );
 		tiles.registerPlugin( new TileCompressionPlugin() );
@@ -104,6 +108,10 @@ export class World {
 			if ( ! this.anyTileLoaded && this.onError ) this.onError( error );
 
 		} );
+
+		// Eklentiler init() sırasında errorTarget'a dokunabildiği için bunu
+		// kayıtlardan SONRA ayarlıyoruz.
+		tiles.errorTarget = errorTarget;
 
 		this.scene.add( tiles.group );
 		this.collider = tiles.group;
@@ -228,6 +236,13 @@ export class World {
 
 		this.tiles.setResolutionFromRenderer( camera, renderer );
 		this.tiles.update();
+
+	}
+
+	// Kaç karo görünür durumda — detayın gelip gelmediğinin göstergesi.
+	get visibleTileCount() {
+
+		return this.tiles ? this.tiles.visibleTiles.size : 0;
 
 	}
 

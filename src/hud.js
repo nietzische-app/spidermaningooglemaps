@@ -40,7 +40,7 @@ export class Hud {
 
 	}
 
-	setTelemetry( player, swinging, spawned ) {
+	setTelemetry( player, swinging, spawned, tileCount = 0 ) {
 
 		let state = 'Havada';
 		if ( swinging ) state = 'Salınım';
@@ -48,7 +48,8 @@ export class Hud {
 		else if ( player.grounded ) state = 'Zeminde';
 
 		const kmh = Math.round( player.velocity.length() * 3.6 );
-		const text = `${ state } · ${ kmh } km/s · ${ Math.round( player.position.y ) } m`;
+		const tiles = tileCount > 0 ? ` · ${ tileCount } karo` : '';
+		const text = `${ state } · ${ kmh } km/s · ${ Math.round( player.position.y ) } m${ tiles }`;
 
 		if ( text !== this._lastTelemetry ) {
 
