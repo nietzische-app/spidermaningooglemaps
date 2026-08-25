@@ -2,6 +2,7 @@ import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { CAMERA, LOCATIONS, SPAWN_PROBE_HEIGHT, TILES } from './config.js';
 import { CameraRig } from './cameraRig.js';
 import { runDiagnostics } from './diagnostics.js';
+import { findSwingSpawn } from './spawn.js';
 import { Hud } from './hud.js';
 import { Input } from './input.js';
 import { Player } from './player.js';
@@ -102,6 +103,7 @@ function dumpDiagnostics() {
 	// İmleci serbest bırak: kilitliyken metin seçilemez, tıklama oyuna döner.
 	if ( document.pointerLockElement ) document.exitPointerLock();
 
+	scene.updateMatrixWorld( true );
 	const { text, data } = runDiagnostics( { world, player, camera } );
 	console.log( text );
 	window.taniSonucu = data;
@@ -205,13 +207,30 @@ function onResize() {
 // yukarıdan aşağı ışın tutana kadar her karede yeniden denenir.
 function trySpawn() {
 
+	// Işınlar mesh'lerin matrixWorld'ünü kullanır; renderer bunları her karede
+	// render sırasında günceller ama trySpawn render'dan ÖNCE çalışıyor. İlk
+	// karede matrisler bayat olduğu için taramanın neredeyse tamamı ıskalıyordu.
+	scene.updateMatrixWorld( true );
+
 	// Yalnızca zemin bulmak yetmez: ilk gelen karo şehrin kaba hâlidir.
 	// Yeterince karo görünür olmadan doğarsak, detay yüklendiğinde karakter
 	// binaların içinde kalır.
 	if ( world.tiles && world.visibleTileCount < TILES.spawnMinTiles ) return;
 
-	const ground = Player.findGround( world, 0, 0, SPAWN_PROBE_HEIGHT );
+	// Sallanmaya elverişli nokta ara: kuleler arasındaki sokak, kule tepesi değil.
+	const spot = findSwingSpawn( world, 0, 0 );
+	const ground = spot ? spot.point : Player.findGround( world, 0, 0, SPAWN_PROBE_HEIGHT );
 	if ( ! ground ) return;
+
+	if ( spot ) {
+
+		console.log(
+			`Doğuş noktası seçildi: ${ spot.anchors } çapa adayı ` +
+			`(${ spot.scanned } nokta tarandı, merkeze uzaklık ` +
+			`${ Math.round( Math.hypot( spot.point.x, spot.point.z ) ) } m)`
+		);
+
+	}
 
 	// ?yukseklik=120 → zeminin 120 m üstünde başla. Sarkacı denemek için
 	// en pratik yol: yerde dururken çevrende yeterince yüksek yapı olmayabilir.

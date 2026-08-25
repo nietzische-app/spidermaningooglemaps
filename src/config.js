@@ -3,8 +3,11 @@ export const LOCATIONS = {
 	// Varsayılan: gökdelen bölgesi. Sallanmak için çevrende senden YÜKSEK
 	// yapılar olması şart; tarihi yarımadada tek yüksek yapının tepesinde
 	// doğarsan ağ atacak hedef kalmaz.
-	istanbul: { lat: 41.0820, lon: 29.0090, label: 'İstanbul — Levent' },
-	levent: { lat: 41.0820, lon: 29.0090, label: 'İstanbul — Levent' },
+	// İş Kuleleri (41.0828, 29.0114) — Levent kule kümesinin göbeği.
+	// Tam koordinat kritik değil: doğuş noktası findSwingSpawn() ile
+	// çevre taranarak seçiliyor.
+	istanbul: { lat: 41.0828, lon: 29.0114, label: 'İstanbul — Levent' },
+	levent: { lat: 41.0828, lon: 29.0114, label: 'İstanbul — Levent' },
 	maslak: { lat: 41.1120, lon: 29.0200, label: 'İstanbul — Maslak' },
 	// Galata Kulesi'nin tam tepesi — manzara güzel ama etrafta ağ atacak
 	// bir şey yok, kule zaten en yüksek nokta.

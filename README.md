@@ -129,10 +129,18 @@ emin olun.
 ?lat=41.0820&lon=29.0090
 ```
 
-Varsayılan **Levent**'tir, çünkü sallanmak için çevrenizde sizden *yüksek*
-yapılar bulunması şarttır. Galata Kulesi gibi tek başına yükselen bir yapının
-tepesinde doğarsanız harita kusursuz 3D olsa bile ağ atacak hedef bulamazsınız
-— **T** raporu bu durumu açıkça yazar.
+Varsayılan **Levent**'tir (İş Kuleleri çevresi).
+
+Doğuş noktası koordinata sabitlenmez. Karolar yüklendikten sonra `findSwingSpawn()`
+çevrede 520 m karelik alanı 169 noktada tarar ve **etrafında en çok yüksek yapı
+bulunan alçak noktayı** seçer — yani kuleler arasındaki sokağı. Bu, iki kırılgan
+durumu birden ortadan kaldırır:
+
+- Verilen koordinat bir gökdelenin tam tepesine denk gelirse (Galata Kulesi
+  durumu) karakter en yüksek noktada doğar ve ağ atacak hiçbir hedef bulamaz.
+- Koordinat birkaç yüz metre şaşarsa alçak bir mahalleye iner.
+
+**T** raporu, seçilen noktada çapa bulunup bulunmadığını ayrıca yazar.
 
 ## Dosyalar
 
