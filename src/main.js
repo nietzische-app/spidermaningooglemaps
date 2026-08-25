@@ -51,13 +51,20 @@ if ( USE_MOCK ) {
 	world.tiles.setCamera( camera );
 	hud.setPlace( location.label );
 
-	world.onError = () => {
+	world.onError = info => {
+
+		const status = info.status ? ` (HTTP ${ info.status })` : '';
+		const message = info.message
+			? `<p class="err">${ escapeHtml( info.message ) }</p>`
+			: '';
+		const hint = info.hint ? `<p>${ info.hint }</p>` : '';
 
 		hud.showOverlay(
-			'<strong>Karolar yüklenemedi.</strong><br />' +
-			'API anahtarını ve Google Cloud projesinde <em>Map Tiles API</em>\'nin ' +
-			'etkin olup olmadığını kontrol edin.<br /><br />' +
-			'Mekanikleri anahtarsız denemek için <code>?mock=1</code> ekleyin.'
+			`<strong>Karolar yüklenemedi${ status }</strong>` +
+			message + hint +
+			'<p class="muted">Mekanikleri anahtarsız denemek için ' +
+			'<code>?mock=1</code> ekleyin.</p>',
+			info.hint ? 1 : 0
 		);
 
 	};
@@ -86,6 +93,14 @@ window.game = { renderer, scene, camera, world, player, swing, rig, input };
 showStartCard();
 window.addEventListener( 'resize', onResize );
 renderer.setAnimationLoop( tick );
+
+function escapeHtml( text ) {
+
+	return String( text ).replace( /[&<>"']/g, ch => ( {
+		'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+	} )[ ch ] );
+
+}
 
 function showStartCard() {
 

@@ -17,6 +17,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TilesRenderer } from '3d-tiles-renderer';
 import { TILES } from './config.js';
 import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
+import { watchGoogleAuthErrors } from './authDiagnostics.js';
 import {
 	GLTFExtensionsPlugin,
 	ReorientationPlugin,
@@ -42,6 +43,7 @@ export class World {
 		this.isMock = false;
 		this.anyTileLoaded = false;
 		this.onError = null;
+		this.authError = null;
 
 		this.raycaster = new Raycaster();
 
@@ -82,6 +84,14 @@ export class World {
 
 		// useRecommendedSettings kapalı: bu seçenek errorTarget'ı sessizce 20
 		// yapıyor. Değeri aşağıda kendimiz belirliyoruz.
+		// Eklentileri kaydetmeden ÖNCE kur: ilk istek oturum anahtarı isteğidir.
+		watchGoogleAuthErrors( info => {
+
+			this.authError = info;
+			if ( this.onError ) this.onError( info );
+
+		} );
+
 		tiles.registerPlugin( new GoogleCloudAuthPlugin( {
 			apiToken: apiKey,
 			autoRefreshToken: true,
@@ -105,7 +115,13 @@ export class World {
 		tiles.addEventListener( 'load-error', ( { error } ) => {
 
 			console.error( '3D Tiles yüklenemedi:', error );
-			if ( ! this.anyTileLoaded && this.onError ) this.onError( error );
+
+			// Gövde okuması yetişmediyse en azından bir şey göster.
+			if ( ! this.anyTileLoaded && ! this.authError && this.onError ) {
+
+				this.onError( { status: 0, message: String( error && error.message || error ), hint: '' } );
+
+			}
 
 		} );
 

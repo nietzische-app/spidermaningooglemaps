@@ -122,6 +122,19 @@ src/config.js     Tüm fizik/kamera ayarları
 Fiziği `src/config.js`'ten ayarlayın — yerçekimi gerçeğin ~2.5 katı
 (`gravity: 26`), aksi hâlde sarkaç ağır çekim gibi duruyor.
 
+## 403 aldığınızda
+
+Uygulama artık Google'ın **gerçek hata mesajını** ekranda gösterir ve ne
+yapılacağını söyler — DevTools açmanız gerekmez.
+
+Bunun neden fetch seviyesinde yapıldığı önemli: ilk hata karo isteğinde değil,
+**oturum anahtarı isteğinde** oluşur. `GoogleCloudAuth.refreshToken()` içindeki
+o fetch, yanıt gövdesini okumadan doğrudan `Error` fırlatır; dolayısıyla eklenti
+seviyesinde (`fetchData`) sarmalamak sebebi yakalayamaz. `src/authDiagnostics.js`
+bu yüzden `window.fetch`'i geçici olarak sarar, yalnızca başarısız
+`tile.googleapis.com` yanıtlarının bir kopyasını okur ve ilk başarılı yanıttan
+sonra kendini söker.
+
 ## Bilinen sınırlar
 
 - **Karolar fotogrametri, temiz bina hacmi değil.** Yüzey "erimiş" tek parça bir

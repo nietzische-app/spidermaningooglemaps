@@ -10,6 +10,7 @@ export class Hud {
 		this.telemetry = document.getElementById( 'telemetry' );
 		this.attribution = document.getElementById( 'attribution' );
 
+		this._overlayPriority = - 1;
 		this._lastAttribution = '';
 		this._lastTelemetry = '';
 
@@ -21,8 +22,14 @@ export class Hud {
 
 	}
 
-	showOverlay( html ) {
+	// priority: daha yüksek olan daha düşüğü ezebilir. Genel "yüklenemedi"
+	// mesajı 0, Google'ın gerçek sebebi 1 — hangisi önce gelirse gelsin
+	// ekranda anlamlı olan kalır.
+	showOverlay( html, priority = 0 ) {
 
+		if ( priority < this._overlayPriority ) return;
+
+		this._overlayPriority = priority;
 		this.overlayBody.innerHTML = html;
 		this.overlay.hidden = false;
 
@@ -30,6 +37,7 @@ export class Hud {
 
 	hideOverlay() {
 
+		this._overlayPriority = - 1;
 		this.overlay.hidden = true;
 
 	}
