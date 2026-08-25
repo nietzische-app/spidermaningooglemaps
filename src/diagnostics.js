@@ -33,6 +33,50 @@ export function runDiagnostics( { world, player, camera } ) {
 		L.push( `görünür karo     : ${ data.visibleTiles }` );
 		L.push( `aktif karo       : ${ data.activeTiles }` );
 
+		// --- Yükleme istatistikleri: inceltmenin nerede takıldığını söyler ---
+		const st = t.stats;
+		data.stats = { ...st };
+		L.push( `kuyrukta         : ${ st.queued }` );
+		L.push( `indiriliyor      : ${ st.downloading }` );
+		L.push( `ayrıştırılıyor   : ${ st.parsing }` );
+		L.push( `yüklendi         : ${ st.loaded }` );
+		L.push( `BAŞARISIZ        : ${ st.failed }` );
+		L.push( `frustum içi      : ${ st.inFrustum }` );
+		L.push( `gezilen (used)   : ${ st.used }` );
+
+		// --- Hata hesabı: sseDenominator çözünürlüğe bağlı; çözünürlük
+		//     kayıtlı değilse ekran-uzayı hatası çöker ve inceltme başlamaz.
+		const res = t.cameraMap && t.cameraMap.get( camera );
+		data.resolution = res ? [ res.x, res.y ] : null;
+		L.push( `kayıtlı kamera   : ${ t.cameraMap ? t.cameraMap.size : '?' }` );
+		L.push( `çözünürlük       : ${ res ? `${ res.x } x ${ res.y }` : 'YOK — sorun burada' }` );
+
+		const ci = t.cameraInfo && t.cameraInfo[ 0 ];
+		data.sseDenominator = ci ? ci.sseDenominator : null;
+		L.push( `sseDenominator   : ${ ci ? ci.sseDenominator.toExponential( 3 ) : '?' }` );
+		L.push( `camera.far       : ${ camera.far }` );
+
+		// --- Görünür karoların derinliği: inceltme ne kadar derine indi? ---
+		let dMin = Infinity, dMax = - Infinity, dSum = 0, n = 0;
+		let geMin = Infinity, geMax = - Infinity;
+		t.visibleTiles.forEach( tile => {
+
+			const depth = tile.internal ? tile.internal.depth : - 1;
+			if ( depth >= 0 ) { dMin = Math.min( dMin, depth ); dMax = Math.max( dMax, depth ); dSum += depth; n ++; }
+			const ge = tile.geometricError;
+			if ( typeof ge === 'number' ) { geMin = Math.min( geMin, ge ); geMax = Math.max( geMax, ge ); }
+
+		} );
+
+		if ( n > 0 ) {
+
+			data.depth = { min: dMin, max: dMax, avg: dSum / n };
+			data.geometricError = { min: geMin, max: geMax };
+			L.push( `karo derinliği   : min ${ dMin }, max ${ dMax }, ort ${ ( dSum / n ).toFixed( 1 ) }` );
+			L.push( `geometrik hata   : ${ geMin.toFixed( 2 ) } — ${ geMax.toFixed( 1 ) } m` );
+
+		}
+
 		const s = t.group.scale;
 		data.groupScale = [ s.x, s.y, s.z ];
 		L.push( `grup ölçeği      : ${ s.x.toFixed( 4 ) }, ${ s.y.toFixed( 4 ) }, ${ s.z.toFixed( 4 ) }` );

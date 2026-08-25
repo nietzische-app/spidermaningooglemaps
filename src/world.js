@@ -15,7 +15,7 @@ import {
 } from 'three';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TilesRenderer } from '3d-tiles-renderer';
-import { TILES } from './config.js';
+import { CAMERA, TILES } from './config.js';
 import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
 import { watchGoogleAuthErrors } from './authDiagnostics.js';
 import {
@@ -128,6 +128,9 @@ export class World {
 		// Eklentiler init() sırasında errorTarget'a dokunabildiği için bunu
 		// kayıtlardan SONRA ayarlıyoruz.
 		tiles.errorTarget = errorTarget;
+
+		// Far düzlemi kısaldığı için kesimi sisle gizle.
+		this.scene.fog = new Fog( this.skyColor.getHex(), CAMERA.fogNear, CAMERA.fogFar );
 
 		this.scene.add( tiles.group );
 		this.collider = tiles.group;

@@ -29,7 +29,7 @@ const camera = new PerspectiveCamera(
 	CAMERA.fov,
 	window.innerWidth / window.innerHeight,
 	0.5,
-	100000
+	CAMERA.far
 );
 camera.position.set( 0, 320, 320 );
 

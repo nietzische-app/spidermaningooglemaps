@@ -72,6 +72,13 @@ export const CAMERA = {
 	lookLift: 1.7,
 	followLerp: 14,
 	fov: 68,
+	// Görüş mesafesi. 100 km'lik bir far düzlemi, ufka kadar HER karoyu
+	// frustuma sokar; errorTarget düşükken motor binlerce uzak karoyu da
+	// inceltmeye çalışır ve yakındaki karolara sıra gelmez. Sokak seviyesi
+	// için 3 km fazlasıyla yeterli; kesim sis ile gizleniyor.
+	far: 3000,
+	fogNear: 500,
+	fogFar: 2900,
 };
 
 // Karakter, tuval açıldığında bu yükseklikten aşağı ışın atarak zemini bulur.
