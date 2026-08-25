@@ -125,9 +125,14 @@ emin olun.
 ## Başlangıç konumu
 
 ```
-?konum=istanbul | newyork | paris | tokyo
-?lat=41.0256&lon=28.9744
+?konum=levent | maslak | galata | newyork | paris | tokyo
+?lat=41.0820&lon=29.0090
 ```
+
+Varsayılan **Levent**'tir, çünkü sallanmak için çevrenizde sizden *yüksek*
+yapılar bulunması şarttır. Galata Kulesi gibi tek başına yükselen bir yapının
+tepesinde doğarsanız harita kusursuz 3D olsa bile ağ atacak hedef bulamazsınız
+— **T** raporu bu durumu açıkça yazar.
 
 ## Dosyalar
 

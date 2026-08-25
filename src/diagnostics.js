@@ -187,13 +187,28 @@ export function runDiagnostics( { world, player, camera } ) {
 		L.push( `karakterden 10 m+: ${ above10 } nokta` );
 		L.push( '' );
 		L.push( spread < 5
-			? '>>> SONUÇ: yüzey DÜZ. Bina kabartması yok.'
-			: `>>> SONUÇ: geometri 3D. ${ spread.toFixed( 0 ) } m kabartma var.` );
+			? '>>> GEOMETRİ: yüzey DÜZ. Bina kabartması yok.'
+			: `>>> GEOMETRİ: 3D, ${ spread.toFixed( 0 ) } m kabartma var.` );
 
-		if ( spread >= 5 && above10 === 0 ) {
+		// Geometrinin 3D olması ağ atılabileceği anlamına gelmez: çapa için
+		// çevrede karakterden YÜKSEK yapı gerekir.
+		const ratio = above10 / ( total - misses );
+		L.push( '' );
+		L.push( `>>> ÇAPA: ${ above10 }/${ total - misses } nokta senden 10 m+ yüksek ` +
+			`(en yüksek ${ max.toFixed( 1 ) } m, sen ${ player.position.y.toFixed( 1 ) } m)` );
 
-			L.push( '>>> Ama çevrende karakterden yüksek nokta yok:' );
-			L.push( '    büyük ihtimalle en yüksek yerdesin (çatı/tepe).' );
+		if ( spread >= 5 && ratio < 0.08 ) {
+
+			L.push( '' );
+			L.push( '>>> SONUÇ: harita 3D ama BURADAN SALLANAMAZSIN.' );
+			L.push( '    Çevrendeki neredeyse her şey senden alçak —' );
+			L.push( '    büyük ihtimalle en yüksek yapının tepesindesin.' );
+			L.push( '    Dene: ?konum=levent&yukseklik=150' );
+			L.push( '          ?konum=newyork&yukseklik=200' );
+
+		} else if ( spread >= 5 ) {
+
+			L.push( '>>> SONUÇ: çevrede ağ atılabilecek hedef var.' );
 
 		}
 

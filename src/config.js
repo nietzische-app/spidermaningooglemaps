@@ -1,9 +1,24 @@
 // Başlangıçta bakılacak yerler (derece). `?konum=newyork` ile seçilir.
 export const LOCATIONS = {
-	istanbul: { lat: 41.0256, lon: 28.9744, label: 'İstanbul — Galata' },
-	newyork: { lat: 40.7484, lon: -73.9857, label: 'New York — Empire State' },
-	paris: { lat: 48.8584, lon: 2.2945, label: 'Paris — Eyfel Kulesi' },
-	tokyo: { lat: 35.6586, lon: 139.7454, label: 'Tokyo — Tokyo Tower' },
+	// Varsayılan: gökdelen bölgesi. Sallanmak için çevrende senden YÜKSEK
+	// yapılar olması şart; tarihi yarımadada tek yüksek yapının tepesinde
+	// doğarsan ağ atacak hedef kalmaz.
+	istanbul: { lat: 41.0820, lon: 29.0090, label: 'İstanbul — Levent' },
+	levent: { lat: 41.0820, lon: 29.0090, label: 'İstanbul — Levent' },
+	maslak: { lat: 41.1120, lon: 29.0200, label: 'İstanbul — Maslak' },
+	// Galata Kulesi'nin tam tepesi — manzara güzel ama etrafta ağ atacak
+	// bir şey yok, kule zaten en yüksek nokta.
+	galata: { lat: 41.0256, lon: 28.9744, label: 'İstanbul — Galata Kulesi' },
+	// Aşağıdakiler bilinçli olarak "simge yapı" değil, gökdelen BÖLGESİ
+	// koordinatlarıdır: simge yapının tepesinde doğmak yukarıdaki Galata
+	// sorununun aynısını üretir (Empire State, Eyfel, Tokyo Tower hep
+	// çevrelerinin en yüksek yapısıdır).
+	newyork: { lat: 40.7549, lon: - 73.9840, label: 'New York — Midtown' },
+	paris: { lat: 48.8918, lon: 2.2377, label: 'Paris — La Défense' },
+	tokyo: { lat: 35.6896, lon: 139.6917, label: 'Tokyo — Shinjuku' },
+	// Simge yapılar: manzara için, sallanmak için değil.
+	empire: { lat: 40.7484, lon: - 73.9857, label: 'New York — Empire State' },
+	eyfel: { lat: 48.8584, lon: 2.2945, label: 'Paris — Eyfel Kulesi' },
 };
 
 // Karo detay (LOD) ayarları.
