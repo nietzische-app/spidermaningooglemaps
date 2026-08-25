@@ -139,6 +139,9 @@ body {
 	display: none;
 }
 
+/* Varsayılan olarak kart da tıklama geçirgenidir: "Başlamak için tıklayın"
+   kartında tek tıkla oyuna girilebilsin diye. Etkileşim gereken paneller
+   (tanı raporu) .interactive sınıfıyla bunu geri açar. */
 #overlay .box {
 	max-width: 520px;
 	padding: 20px 24px;
@@ -194,10 +197,36 @@ body {
 	line-height: 1.45;
 	text-align: left;
 	white-space: pre;
+	user-select: text;
+	-webkit-user-select: text;
+	cursor: text;
 }
 
-#overlay .box:has(.diag) {
-	max-width: 640px;
+#overlay .row {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	margin-top: 4px;
+}
+
+#overlay button {
+	padding: 7px 14px;
+	border-radius: 8px;
+	border: 1px solid rgba(232, 238, 245, 0.24);
+	background: rgba(232, 238, 245, 0.1);
+	color: #e8eef5;
+	font: inherit;
+	font-size: 12.5px;
+	cursor: pointer;
+}
+
+#overlay button:hover {
+	background: rgba(232, 238, 245, 0.18);
+}
+
+#overlay .box.interactive {
+	pointer-events: auto;
+	max-width: 700px;
 }
 
 #overlay .muted {

@@ -27,12 +27,13 @@ export class Hud {
 	// priority: daha yüksek olan daha düşüğü ezebilir. Genel "yüklenemedi"
 	// mesajı 0, Google'ın gerçek sebebi 1 — hangisi önce gelirse gelsin
 	// ekranda anlamlı olan kalır.
-	showOverlay( html, priority = 0 ) {
+	showOverlay( html, priority = 0, interactive = false ) {
 
 		if ( priority < this._overlayPriority ) return;
 
 		this._overlayPriority = priority;
 		this.overlayBody.innerHTML = html;
+		this.overlayBody.classList.toggle( 'interactive', interactive );
 		this.overlay.hidden = false;
 
 	}

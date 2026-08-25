@@ -99,15 +99,52 @@ renderer.setAnimationLoop( tick );
 
 function dumpDiagnostics() {
 
+	// İmleci serbest bırak: kilitliyken metin seçilemez, tıklama oyuna döner.
+	if ( document.pointerLockElement ) document.exitPointerLock();
+
 	const { text, data } = runDiagnostics( { world, player, camera } );
 	console.log( text );
 	window.taniSonucu = data;
+	window.taniMetni = text;
+
 	hud.showOverlay(
 		'<strong>Tanı raporu</strong>' +
 		`<pre class="diag">${ escapeHtml( text ) }</pre>` +
-		'<p class="muted">Konsola da yazıldı. Kapatmak için tuvale tıklayın.</p>',
-		2
+		'<div class="row">' +
+		'<button id="diag-copy" type="button">Panoya kopyala</button>' +
+		'<button id="diag-refresh" type="button">Yenile</button>' +
+		'</div>' +
+		'<p class="muted">Oyuna dönmek için tuvalin boş bir yerine tıklayın.</p>',
+		2,
+		true
 	);
+
+	const copy = document.getElementById( 'diag-copy' );
+	const refresh = document.getElementById( 'diag-refresh' );
+
+	copy.addEventListener( 'click', async () => {
+
+		try {
+
+			await navigator.clipboard.writeText( text );
+			copy.textContent = 'Kopyalandı ✓';
+
+		} catch ( e ) {
+
+			// Pano izni yoksa metni seçili bırak, kullanıcı Ctrl+C yapsın.
+			const pre = document.querySelector( '#overlay .diag' );
+			const range = document.createRange();
+			range.selectNodeContents( pre );
+			const sel = window.getSelection();
+			sel.removeAllRanges();
+			sel.addRange( range );
+			copy.textContent = 'Seçildi — Ctrl+C';
+
+		}
+
+	} );
+
+	refresh.addEventListener( 'click', () => dumpDiagnostics() );
 
 }
 

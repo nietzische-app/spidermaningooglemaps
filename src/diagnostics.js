@@ -77,6 +77,16 @@ export function runDiagnostics( { world, player, camera } ) {
 
 		}
 
+		// --- Rapor kararlı mı? Yükleme sürerken alınan ölçüm yanıltır ---
+		const busy = st.queued + st.downloading + st.parsing;
+		data.busy = busy;
+		L.push( '' );
+		L.push( busy > 0
+			? `>>> HÂLÂ YÜKLENİYOR (kuyruk ${ st.queued }, ayrıştırma ${ st.parsing }).\n` +
+			  '    Bu rapor KARARSIZ. Kuyruk boşalınca "Yenile" ile tekrar ölçün.'
+			: '>>> Yükleme durdu, rapor kararlı.' );
+		L.push( '' );
+
 		const s = t.group.scale;
 		data.groupScale = [ s.x, s.y, s.z ];
 		L.push( `grup ölçeği      : ${ s.x.toFixed( 4 ) }, ${ s.y.toFixed( 4 ) }, ${ s.z.toFixed( 4 ) }` );
